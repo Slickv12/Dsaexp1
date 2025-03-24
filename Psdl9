@@ -1,0 +1,50 @@
+Source Code
+/*Expt.No. 09: PWM Generation using PIC18F4520 to vary speed of 
+DCmotor. /*
+* File: DCmotorcontrol.c
+* Author: Sanjay
+*
+* Created on February 26, 2022, 12:16 PM*/
+#include <xc.h>
+#include<p18f452.h>
+#pragma config OSC=HS
+#pragma config PWRT=OFF
+#pragma config WDT=OFF
+void DELAY(unsigned int);
+void main()
+{
+TRISCbits.RC6 = 0; // Set PORTC, RC6 as output (DCM IN1) 
+TRISCbits.RC7 = 0; // Set PORTC, RC6 as output (DCM IN2)
+TRISCbits.RC2=0; ///RC2 pin as PWM output pin
+PR2=249; ////PR2=(Fosc/4xNxFpwm)
+CCP1CON = 0x0C; // Configure CCP1CON as PWM mode.
+T2CON = 0x07; // Start timer 2 with prescaler 1:16 
+PORTCbits.RC6 = 1; // Turn ON the Motor
+PORTCbits.RC7 = 0;
+while(1) ///forever loop
+{
+CCPR1L=62; //25% Duty cycle
+CCP1CON=0X1C; ///PWM mode, DCB1:DCB0=0.25 Decimal 
+points
+DELAY(10);
+CCPR1L=124; //50% Duty cycle
+CCP1CON=0X2C; ///PWM mode, DCB1:DCB0=0.50 Decimal points
+DELAY(10);
+CCPR1L=186; //75% Duty cycle
+CCP1CON=0X3C; ///PWM mode, DCB1:DCB0=0.75 Decimal points
+DELAY(10);
+CCPR1L=249; //100% Duty cycle
+CCP1CON=0X0C; ///PWM mode, DCB1:DCB0=0.00 Decimal points
+DELAY(10);
+TMR2=0x00; // Initially load TMR2=00H
+PIR1bits.TMR2IF=0; //Clear interrupt flag
+T2CONbits.TMR2ON=1; //start timer 2
+while(PIR1bits.TMR2IF==0); ///monitor TMR2 interrupt flag
+}
+}
+void DELAY (unsigned int time) // Definition of delay subroutine
+{
+unsigned int i, j;
+for (i = 0; i < time; i++) // Loop for time
+for (j = 0; j < 710; j++);// Calibrated for a 1 ms delay in MPLAB
+}
