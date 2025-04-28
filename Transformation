@@ -1,0 +1,231 @@
+#include <GL/glut.h>
+#include <math.h>
+
+double parr[3][4];
+
+
+void init() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0, 0, 0, 1);
+    glColor3f(1, 0, 1);
+    gluOrtho2D(-500, 500, -500, 500);
+
+    // Polygon Default
+    parr[0][0] = 100; parr[1][0] = 100; parr[2][0] = 1;
+    parr[0][1] = 300; parr[1][1] = 100; parr[2][1] = 1;
+    parr[0][2] = 300; parr[1][2] = 300; parr[2][2] = 1;
+    parr[0][3] = 100; parr[1][3] = 300; parr[2][3] = 1;
+}
+
+
+double degreeToRad(double deg) {
+    return 3.14 * (deg / 180);
+}
+
+void polygon() {
+    glColor3f(1, 0, 0);
+    glBegin(GL_LINE_LOOP);
+
+    for (int i = 0; i < 4; i++) {
+        glVertex2f(parr[0][i], parr[1][i]);
+    }
+
+    glEnd();
+    glFlush();
+}
+void multiplyMatrix(double mat[3][3]) {
+    double result[3][4];
+
+    for (int i = 0; i < 3; i++) {          // rows of transformation matrix
+        for (int j = 0; j < 4; j++) {       // columns of points
+            result[i][j] = 0;
+            for (int k = 0; k < 3; k++) {   // multiplication
+                result[i][j] += mat[i][k] * parr[k][j];
+            }
+        }
+    }
+
+    // Copy result back to parr
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 4; j++) {
+            parr[i][j] = result[i][j];
+        }
+    }
+}
+
+
+
+void drawCorodinates() {
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glColor3f(1, 1, 1);
+    glPointSize(4);
+
+    glBegin(GL_LINES);
+    glVertex2f(-500, 0);
+    glVertex2f(500, 0);
+
+    glVertex2f(0, 500);
+    glVertex2f(0, -500);
+    glEnd();
+
+    glColor3f(1, 0, 0);
+
+    glBegin(GL_POINTS);
+    glVertex2f(0, 0);
+    glEnd();
+
+    glFlush();
+}
+
+// Translation
+void translate2d() {
+void translate2d() {
+    double tx = 200, ty = 50;
+
+    double transMat[3][3] = {
+        {1, 0, tx},
+        {0, 1, ty},
+        {0, 0, 1}
+    };
+
+    multiplyMatrix(transMat);
+    polygon();
+}
+
+
+// Rotation
+void rotation() {
+void rotation() {
+    double angle = 180.0;
+    double rad = degreeToRad(angle);
+
+    double rotMat[3][3] = {
+        {cos(rad), -sin(rad), 0},
+        {sin(rad),  cos(rad), 0},
+        {0, 0, 1}
+    };
+
+    multiplyMatrix(rotMat);
+    polygon();
+}
+
+
+// Scaling
+void scaling2d() {
+    double sx = 1.5, sy = 1.5;
+
+    double scaleMat[3][3] = {
+        {sx, 0, 0},
+        {0, sy, 0},
+        {0, 0, 1}
+    };
+
+    multiplyMatrix(scaleMat);
+    polygon();
+}
+
+
+// Reflection
+void reflectX() {
+    double reflectMat[3][3] = {
+        {1, 0, 0},
+        {0, -1, 0},
+        {0, 0, 1}
+    };
+
+    multiplyMatrix(reflectMat);
+    polygon();
+}
+
+void reflectY() {
+    double reflectMat[3][3] = {
+        {-1, 0, 0},
+        {0, 1, 0},
+        {0, 0, 1}
+    };
+
+    multiplyMatrix(reflectMat);
+    polygon();
+}
+
+
+// Rotation About an Arbitrary Point
+void rotationArbitraryPoint() {
+void rotationArbitraryPoint() {
+    double angle = 45.0;
+    double rad = degreeToRad(angle);
+    double px = 100, py = 100;
+
+    // 1. Translate so that point becomes origin
+    double transMat1[3][3] = {
+        {1, 0, -px},
+        {0, 1, -py},
+        {0, 0, 1}
+    };
+    multiplyMatrix(transMat1);
+
+    // 2. Rotate about origin
+    double rotMat[3][3] = {
+        {cos(rad), -sin(rad), 0},
+        {sin(rad),  cos(rad), 0},
+        {0, 0, 1}
+    };
+    multiplyMatrix(rotMat);
+
+    // 3. Translate back
+    double transMat2[3][3] = {
+        {1, 0, px},
+        {0, 1, py},
+        {0, 0, 1}
+    };
+    multiplyMatrix(transMat2);
+
+    polygon();
+}
+
+
+void menu(int ch) {
+    drawCorodinates();
+    switch (ch) {
+    case 1:
+        polygon();
+        break;
+
+    case 2:
+        translate2d();
+        break;
+    case 3:
+        scaling2d();
+        break;
+    case 4:
+        rotation();
+        break;
+ 
+    case 7:
+        rotationArbitraryPoint(); // Added rotation around arbitrary point
+        break;
+    }
+}
+
+int main(int argc, char **argv) {
+    glutInit(&argc, argv);
+    glutInitWindowSize(500, 500);
+    glutInitWindowPosition(100, 100);
+
+    glutCreateWindow("2D Transformation");
+    init();
+    glutDisplayFunc(drawCorodinates);
+
+    glutCreateMenu(menu);
+    glutAddMenuEntry("1 Display Polygon", 1);
+    glutAddMenuEntry("2 Translate", 2);
+    glutAddMenuEntry("3 Scaling", 3);
+    glutAddMenuEntry("4 Rotation", 4);
+    
+    glutAddMenuEntry("5 Rotation About Arbitrary Point", 7); // Added menu entry for the new rotation
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+
+    glutMainLoop();
+    return 0;
+}
